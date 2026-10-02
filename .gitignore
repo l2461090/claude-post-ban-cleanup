@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+*.db
+*.db-*
+*.sqlite*
+*.log
+*.receipt.json
+*cleanup-plan.json
+plan.json
+.claude-cleanup-recovery/
+.Trash/
