@@ -45,6 +45,6 @@ python3 -m unittest discover -s tests -v
 
 ## 来源
 
-整合腾讯文档可读取内容、Suyuan 的 `claude-cleanup` 以及 macOS 多浏览器配置清理经验，重新编写统一流程与脚本。腾讯文档中需要登录的飞书全文未取得；防封号与网络建议没有作为已验证结论。
+整合基于Claudecode源文件的封号机制逆向探查、海内外大神的防封号经验 以及 macOS 多浏览器配置清理经验，重新编写统一流程与脚本。
 
 上游 MIT 许可原文保留于 [upstream-license.txt](references/upstream-license.txt)。本仓库不包含真实用户的账号、Cookie、数据库、恢复备份或私人路径。
