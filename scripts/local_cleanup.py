@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Auditable macOS Claude cleanup; standard library only, no unattended writes.
+"""Auditable macOS / Windows Claude cleanup; no unattended writes.
 
 audit writes only the requested metadata plan. apply requires a reviewed plan and
 a human confirmation in a real terminal. Browser / CC Switch work is separate.
@@ -570,6 +570,11 @@ def parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if sys.platform == "win32":
+        # Keep existing macOS plans / receipts compatible; Windows has its own
+        # paths, ACL handling, process inspection and recoverable quarantine.
+        from windows_cleanup import main as windows_main
+        return windows_main(argv)
     args = parser().parse_args(argv)
     home = Path.home().absolute()
     try:

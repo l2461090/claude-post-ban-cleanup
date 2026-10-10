@@ -28,3 +28,9 @@
 这些是特定版本遇到的情况，不应写成所有机器都会发生的固定数量或固定路径批次。技能包不包含任何用户备份、数据库、Cookie、账号、私人主目录或截图。对新版本先检查 schema 和路径，不把本次数量硬编码为删除条件。
 
 清理结果依据实际文件/记录复核；不是 Anthropic 官方封号原因分析，也不是防封号承诺。
+
+## Windows 支持（2026-10-10）
+
+新增原生 Windows 后端、Mac/Windows 浏览器只读盘点及双平台 CI。凭据位置依据 [Claude Code 官方认证文档](https://code.claude.com/docs/en/iam#credential-management)，MSIX 安装依据 [官方 Windows 部署说明](https://support.claude.com/en/articles/12622703-deploy-claude-desktop-for-windows)，用户数据/网站存储依据 [Electron 路径文档](https://www.electronjs.org/docs/latest/api/app#appgetpathname)，NTFS 拒绝条件依据 [Microsoft 重解析点文档](https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-points)。MSIX 虚拟化路径同时参考 [Anthropic 仓库中的现场报告](https://github.com/anthropics/claude-code/issues/26073)，以当前用户已识别包及实际路径校验，不泛化为所有版本的固定位置。
+
+测试使用临时文件、虚构凭据和数据库；不把 CI 通过描述为真实账号或每个客户端版本都已验证。Windows 功能和未处理范围见 [windows.md](windows.md)。

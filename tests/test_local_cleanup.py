@@ -16,6 +16,7 @@ spec.loader.exec_module(c)
 REAL_PROCESSES = c.processes
 
 
+@unittest.skipIf(os.name == "nt", "macOS backend: exercised on macOS; native Windows has its own suite")
 class CleanupTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent)

@@ -22,9 +22,10 @@ Chromium 常见数据根位置仅供定位，必须检测实际存在的路径�
 | Linux | `~/.config/google-chrome` | 查询对应产品的数据目录 |
 
 用 Chromium `Local State` 中的配置清单辅助对应，不能因为目录名称类似就全部删除。
+Mac / Windows 可运行 `scripts/browser_inventory.py` 做只读辅助盘点，Windows 用 `py -3`。Windows Edge 根为 `%LOCALAPPDATA%\Microsoft\Edge\User Data`，Brave 根为 `%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data`，Firefox 从 `%APPDATA%\Mozilla\Firefox\profiles.ini` 的实际配置清单定位。脚本不输出账号邮箱、Cookie 值或密码，也不删除网站数据；Firefox 仅列配置，Safari 需使用原生设置。
 Cookie 数据库可能在配置根的 `Cookies`，也可能在 `Network/Cookies`。
 同一配置存在多个候选时，核查实际使用位置并记录；不要自行选一个后声称全部完成。
-本包的实际执行经验来自 macOS Chrome。Windows、Linux 和其他浏览器应按现场 UI、路径及数据库结构分支，不能声称已在这些平台验证。
+本包的真实账号执行经验来自 macOS Chrome；两平台的浏览器盘点用隔离数据库测试域名边界和只读行为。Windows / 其他浏览器的实际网站删除仍按现场 UI、路径和数据库结构分支，不能由测试推断所有版本的登录数据已清理。
 
 ## 2. 确认精确目标
 

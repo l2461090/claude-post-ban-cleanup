@@ -10,4 +10,5 @@ __pycache__/
 *cleanup-plan.json
 plan.json
 .claude-cleanup-recovery/
+.claude-cleanup-quarantine/
 .Trash/

@@ -1,8 +1,8 @@
 # 客户端审计与保护范围
 
-## 已验证环境
+## 平台入口
 
-Python 3.10+ 标准库，macOS 用户自己的主目录。执行者须有文件和终端权限；操作 home/Library 或钥匙串时，按 AI 工具本身的审批机制授权。脚本不安装依赖、不需要读管理员密码。
+Python 3.10+ 标准库，支持 macOS 与原生 Windows 的当前用户数据。`local_cleanup.py` 自动分派后端；以下目标说明主要针对 macOS，Windows 的路径、MSIX 分支、ACL、凭据和恢复机制见 [windows.md](windows.md)。执行者须有文件和终端权限；操作用户目录、钥匙串或 Windows PowerShell 时，按 AI 工具本身的审批机制授权。脚本不安装依赖、不需要读管理员密码。
 
 先读取 `local_cleanup.py --help`，以随附版本实际参数为准。遇到应用新版本改变路径，先核实应用归属，补充精确计划，不能扩展成任意文件匹配删除。
 
@@ -32,8 +32,8 @@ Python 3.10+ 标准库，macOS 用户自己的主目录。执行者须有文件�
 - 任何步骤失败都保存已完成动作的 receipt。恢复时按其映射逐项还原，先关闭相关应用，不能以备份覆盖其他工具的新资料。
 - receipt 的 `recoverable` 表示文件恢复批次仍存在，不表示被删除的钥匙串凭据也能恢复。
 
-## Windows / Linux
+## Windows / Linux / WSL
 
-本包没有验证过这两个平台的写入自动化。`.claude` 和 `.claude.json` 可以作为只读候选，不代表所有版本都一致。用当前应用官方文档、安装清单和当前 OS 用户目录确认归属；不要把 `/Applications`、`Library`、macOS `security` 命令直接翻译为不经验证的删除命令。
+原生 Windows 已有独立后端 `scripts/windows_cleanup.py`，由统一入口自动调用，流程见 [Windows 参考](windows.md)。它不调用 macOS `security`、不扫描其他系统用户、不整删 AppData，也不修改注册表或 Windows 凭据管理器。两平台均提供隔离测试，Windows 原生 ACL 和 NTFS junction 检查由 Windows CI 运行；这不等于验证过每个 Claude 版本。
 
-可以执行不写盘的审计、使用浏览器原生设置和受支持的卸载/退出登录功能。若用户需要文件层面的清理，明确告知平台限制并列出经过验证的候选目标和恢复机制，取得确认后再实施；未知 Desktop 数据路径应跳过并报告，不能假称全面清理成功。
+Linux/WSL 尚无客户端写入后端。不要从 Windows 清理脚本进入 WSL 挂载目录；未知 Desktop 路径跳过并报告。可使用浏览器原生设置和受支持的卸载/退出登录功能，但不能假称全面清理成功。

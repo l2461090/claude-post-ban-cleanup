@@ -1,6 +1,6 @@
 interface:
   display_name: "Claude 封号后电脑清理"
-  short_description: "用于曾发生 Claude 账号封禁的电脑，确认后清理系统本地数据和浏览器记录"
+  short_description: "在 Mac 或 Windows 上审计并经确认清理 Claude 本地数据与浏览器记录"
   default_prompt: "我曾在这台电脑上使用的 Claude 账号被封号。请使用 $claude-post-ban-cleanup 检查相关系统本地数据和全部浏览器用户配置，列出清理计划，取得我的确认后再执行。"
 policy:
   allow_implicit_invocation: true
