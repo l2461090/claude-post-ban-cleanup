@@ -102,6 +102,10 @@ def powershell(script: str, path_env: dict | None = None) -> str:
     executable = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32/WindowsPowerShell/v1.0/powershell.exe"
     env = os.environ.copy()
     env.update(path_env or {})
+    # A caller launched from PowerShell 7 can export its module search path.
+    # Load only this Windows PowerShell's built-in modules, avoiding both a
+    # cross-version autoload failure and user module shadowing. Child only.
+    env["PSModulePath"] = str(executable.parent / "Modules")
     command = "$ErrorActionPreference='Stop'; [Console]::OutputEncoding=[Text.UTF8Encoding]::new(); " + script
     try:
         result = subprocess.run([str(executable), "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command],

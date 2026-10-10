@@ -273,6 +273,23 @@ class WindowsCleanupTests(unittest.TestCase):
             w.powershell("fixture")
         self.assertNotIn("fixture-secret", str(raised.exception))
 
+    def test_powershell_uses_its_own_system_modules_without_changing_parent_environment(self):
+        success = subprocess.CompletedProcess([], 0, stdout="fixture", stderr="")
+        with patch.dict(os.environ, {"PSModulePath": "unrelated-pwsh7-modules"}), \
+                patch.object(w.subprocess, "run", return_value=success) as run:
+            self.assertEqual(w.powershell("fixture"), "fixture")
+            self.assertEqual(os.environ["PSModulePath"], "unrelated-pwsh7-modules")
+        command = run.call_args.args[0]
+        child = run.call_args.kwargs["env"]
+        self.assertEqual(child["PSModulePath"], str(Path(command[0]).parent / "Modules"))
+
+    @unittest.skipUnless(os.name == "nt", "native Windows PowerShell modules exercised on Windows CI")
+    def test_native_windows_cim_and_appx_modules(self):
+        # Native read-only queries on the disposable runner; no real home writes.
+        count = int(w.powershell("@(Get-CimInstance Win32_Process).Count"))
+        self.assertGreater(count, 0)
+        self.assertIsInstance(REAL_PACKAGES(), list)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
