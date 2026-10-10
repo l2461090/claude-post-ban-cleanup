@@ -34,6 +34,17 @@ class WindowsCleanupTests(unittest.TestCase):
                                                "CLAUDE_CONFIG_DIR": str(self.home / ".claude")})]
         for p in self.patches:
             p.start()
+        if os.name == "nt":
+            # Diagnostics only for isolated fake fixtures on CI. Production
+            # PowerShell output remains withheld by windows_cleanup.py.
+            run = subprocess.run
+            def fixture_command(args, **kwargs):
+                result = run(args, **kwargs)
+                if result.returncode and str(args[0]).lower().endswith("powershell.exe"):
+                    raise AssertionError("Fixture PowerShell failure: " + str(result.stderr))
+                return result
+            diagnostic = patch.object(w.subprocess, "run", side_effect=fixture_command)
+            diagnostic.start(); self.patches.append(diagnostic)
 
     def tearDown(self):
         for p in reversed(self.patches):
