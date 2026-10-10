@@ -306,7 +306,8 @@ class WindowsCleanupTests(unittest.TestCase):
             self.assertEqual(os.environ["PSModulePath"], "unrelated-pwsh7-modules")
         command = run.call_args.args[0]
         child = run.call_args.kwargs["env"]
-        self.assertEqual(child["PSModulePath"], str(Path(command[0]).parent / "Modules"))
+        self.assertEqual(child["PSMODULEPATH"], str(Path(command[0]).parent / "Modules"))
+        self.assertEqual([k for k in child if k.casefold() == "psmodulepath"], ["PSMODULEPATH"])
 
     @unittest.skipUnless(os.name == "nt", "native Windows PowerShell modules exercised on Windows CI")
     def test_native_windows_cim_and_appx_modules(self):

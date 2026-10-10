@@ -105,7 +105,13 @@ def powershell(script: str, path_env: dict | None = None) -> str:
     # A caller launched from PowerShell 7 can export its module search path.
     # Load only this Windows PowerShell's built-in modules, avoiding both a
     # cross-version autoload failure and user module shadowing. Child only.
-    env["PSModulePath"] = str(executable.parent / "Modules")
+    # os.environ.copy() on Windows contains uppercase keys. A plain dict with
+    # both PSMODULEPATH and PSModulePath creates ambiguous child environment
+    # entries, so remove all case variants before assigning the system path.
+    for key in list(env):
+        if key.casefold() == "psmodulepath":
+            del env[key]
+    env["PSMODULEPATH"] = str(executable.parent / "Modules")
     command = "$ErrorActionPreference='Stop'; [Console]::OutputEncoding=[Text.UTF8Encoding]::new(); " + script
     try:
         result = subprocess.run([str(executable), "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command],
