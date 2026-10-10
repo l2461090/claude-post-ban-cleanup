@@ -243,8 +243,14 @@ def copy_acl(source: Path, destination: Path) -> None:
     if os.name == "nt":
         powershell("$a=Get-Acl -LiteralPath $env:CC_SOURCE; Set-Acl -LiteralPath $env:CC_DESTINATION -AclObject $a; "
                    "$b=Get-Acl -LiteralPath $env:CC_DESTINATION; "
-                   "$section=[Security.AccessControl.AccessControlSections]::Access; "
-                   "if ($a.GetSecurityDescriptorSddlForm($section) -ne $b.GetSecurityDescriptorSddlForm($section)) "
+                   # Windows normalizes SDDL auto-inheritance flags on write.
+                   # Compare actual ACEs / protection, not serialized flag text.
+                   "function Rules($acl) {(@($acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]) "
+                   "| ForEach-Object {$_.IdentityReference.Value+'|'+[int]$_.FileSystemRights+'|'+"
+                   "[int]$_.AccessControlType+'|'+[int]$_.InheritanceFlags+'|'+[int]$_.PropagationFlags+'|'+"
+                   "$_.IsInherited} | Sort-Object) -join ';')}; "
+                   "if (!$a.AreAccessRulesCanonical -or !$b.AreAccessRulesCanonical "
+                   "-or $a.AreAccessRulesProtected -ne $b.AreAccessRulesProtected -or (Rules $a) -ne (Rules $b)) "
                    "{throw 'File ACL preservation failed'}",
                    {"CC_SOURCE": str(source), "CC_DESTINATION": str(destination)})
     else:
@@ -443,11 +449,20 @@ def apply(plan_path: Path, home: Path) -> dict:
                 "quarantine": str(quarantine), "moved_count": len(receipt["moved"]),
                 "rewritten_count": len(receipt["rewritten"]), "recoverable": True, "purged": False}
     except (Exception, KeyboardInterrupt) as error:
+        receipt_update_failed = False
+        receipt["status"] = "partial"
         if exists(receipt_path):
-            atomic_json(receipt_path, receipt)
+            try:
+                atomic_json(receipt_path, receipt)
+            except (Exception, KeyboardInterrupt):
+                # A permission / disk error while saving a receipt must not
+                # hide the latest completed mutation or its recovery path.
+                receipt_update_failed = True
         emit({"status": "partial", "receipt": str(receipt_path) if exists(receipt_path) else None,
               "recovery": str(recovery), "quarantine": str(quarantine),
               "message": str(error) if isinstance(error, Stop) else "Operation failed; private details withheld.",
+              "receipt_update_failed": receipt_update_failed,
+              "latest_moved": receipt["moved"], "latest_rewritten": receipt["rewritten"],
               "remaining_actions_executed": False})
         raise Stop("Windows cleanup stopped; preserve recovery materials and do not replay this plan.") from None
 

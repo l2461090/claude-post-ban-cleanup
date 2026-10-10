@@ -210,6 +210,24 @@ class WindowsCleanupTests(unittest.TestCase):
         with self.assertRaises(w.Stop): w.purge(Path(result["receipt"]), self.home)
         self.assertTrue(Path(result["recovery"]).exists())
 
+    def test_receipt_write_failure_after_move_still_reports_latest_recovery_mapping(self):
+        source = self.put(".claude/cache/data", "recover-me")
+        self.audit()
+        real_atomic = w.atomic_json
+        def write(path, data, **kwargs):
+            if "moved" in data and any(m["move_returned"] for m in data["moved"]):
+                raise OSError("fixture-secret write failure")
+            return real_atomic(path, data, **kwargs)
+        with patch.object(w, "terminal_confirm"), patch.object(w, "atomic_json", side_effect=write), \
+                contextlib.redirect_stdout(io.StringIO()) as capture, self.assertRaises(w.Stop):
+            w.apply(self.plan_path, self.home)
+        output = json.loads(capture.getvalue())
+        self.assertTrue(output["receipt_update_failed"])
+        self.assertTrue(output["latest_moved"][0]["move_returned"])
+        self.assertFalse(output["remaining_actions_executed"])
+        self.assertEqual((Path(output["latest_moved"][0]["destination"]) / "data").read_text(), "recover-me")
+        self.assertFalse(source.exists()); self.assertNotIn("fixture-secret", capture.getvalue())
+
     def test_process_metadata_sanitization_and_denied_visibility(self):
         rows = [{"ProcessId": 333, "Name": "node.exe", "CommandLine": r'node C:\node_modules\@anthropic-ai\claude-code\cli.js --token fixture-secret'},
                 {"ProcessId": 334, "Name": "Chrome.exe", "CommandLine": "chrome"},
@@ -259,6 +277,13 @@ class WindowsCleanupTests(unittest.TestCase):
                              "@{Protected=$a.AreAccessRulesProtected; Count=@($a.Access).Count}|ConvertTo-Json -Compress",
                              {"CC_PRIVATE": str(private)})
         self.assertEqual(json.loads(output), {"Protected": True, "Count": 2})
+        original = private / "original.json"; original.write_text("fixture")
+        replacement = private / "replacement.json"; replacement.write_text("fixture")
+        w.copy_acl(original, replacement)
+        output = w.powershell("$a=Get-Acl -LiteralPath $env:CC_FILE; "
+                             "@{Count=@($a.Access).Count; Inherited=@($a.Access|Where-Object IsInherited).Count} "
+                             "| ConvertTo-Json -Compress", {"CC_FILE": str(replacement)})
+        self.assertEqual(json.loads(output), {"Count": 2, "Inherited": 2})
 
     def test_entrypoint_dispatches_without_running_macos_operations(self):
         with patch.object(w, "main", return_value=17) as call:
